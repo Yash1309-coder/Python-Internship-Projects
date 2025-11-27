@@ -1,29 +1,18 @@
 import streamlit as st
 import pandas as pd
-
-# Page Configuration
 st.set_page_config(page_title="Khata Book Dashboard", page_icon="📒", layout="wide")
-
-# --- 1. Session State Initialization (The "Memory" of the app) ---
 if 'khata' not in st.session_state:
     st.session_state['khata'] = {}
-
-# --- Helper Functions ---
-
 def calculate_balance(transactions):
     """Calculates balance from a list of transactions."""
     total_gave = sum(amount for t, amount in transactions if t == "gave")
     total_got = sum(amount for t, amount in transactions if t == "got")
     return total_gave, total_got, total_gave - total_got
-
-# --- Sidebar Navigation ---
 st.sidebar.title("📒 Desi Khata Book")
 menu = st.sidebar.radio(
     "Menu", 
     ["Dashboard", "Add Customer", "New Transaction", "View Ledger", "Reset Data"]
 )
-
-# --- PAGE: DASHBOARD ---
 if menu == "Dashboard":
     st.title("📊 Financial Overview")
     
@@ -33,32 +22,24 @@ if menu == "Dashboard":
         # Calculate Aggregates
         grand_total_gave = 0
         grand_total_got = 0
-        
-        # Prepare data for the table
         summary_data = []
-        
-        for name, transactions in st.session_state['khata'].items():
+         for name, transactions in st.session_state['khata'].items():
             given, got, balance = calculate_balance(transactions)
             grand_total_gave += given
             grand_total_got += got
-            
-            # Determine Status string
             if balance > 0:
                 status = f"You will get ₹{balance}"
             elif balance < 0:
                 status = f"You have to pay ₹{abs(balance)}"
             else:
                 status = "Settled 😮‍💨"
-                
-            summary_data.append({
+             summary_data.append({
                 "Customer": name,
                 "Total Given (Udhaar)": given,
                 "Total Received (Jama)": got,
                 "Net Balance": balance,
                 "Status": status
             })
-
-        # Top Metrics
         col1, col2, col3 = st.columns(3)
         col1.metric("Total Given (Market)", f"₹{grand_total_gave}")
         col2.metric("Total Received", f"₹{grand_total_got}")
@@ -69,8 +50,6 @@ if menu == "Dashboard":
         st.subheader("Customer Balances")
         df_summary = pd.DataFrame(summary_data)
         st.dataframe(df_summary, use_container_width=True)
-
-# --- PAGE: ADD CUSTOMER ---
 elif menu == "Add Customer":
     st.title("👤 Add New Customer")
     
@@ -87,8 +66,6 @@ elif menu == "Add Customer":
                     st.success(f"{new_name} added successfully!")
             else:
                 st.warning("Please enter a valid name.")
-
-# --- PAGE: NEW TRANSACTION ---
 elif menu == "New Transaction":
     st.title("💸 Record Transaction")
     
@@ -112,8 +89,6 @@ elif menu == "New Transaction":
                 type_key = "gave" if "Give" in trans_type else "got"
                 st.session_state['khata'][selected_customer].append((type_key, amount))
                 st.success("Transaction recorded successfully! ✅")
-
-# --- PAGE: VIEW LEDGER ---
 elif menu == "View Ledger":
     st.title("📖 Detailed Khata")
     
@@ -124,8 +99,6 @@ elif menu == "View Ledger":
         selected_view = st.selectbox("Filter by Customer", ["All"] + customer_list)
         
         all_records = []
-        
-        # Build the rows
         for name, transactions in st.session_state['khata'].items():
             if selected_view == "All" or selected_view == name:
                 for t_type, amount in transactions:
@@ -157,6 +130,7 @@ elif menu == "Reset Data":
         st.session_state['khata'] = {}
         st.success("Khata has been cleared.")
         st.rerun()
+
 
 
 
